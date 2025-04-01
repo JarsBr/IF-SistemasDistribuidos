@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento de Temperatura em Tempo Real</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #temperatures { margin-top: 20px; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<h1>Monitoramento de Temperatura em Tempo Real</h1>
+<div id="temperatures">Aguardando dados...</div>
+
+<script>
+    var socket = new SockJS('/ws');  // Verifique se a URL é a mesma configurada no servidor
+    var stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+        console.log("Conectado: " + frame);
+        stompClient.subscribe('/topic/temperature', function (message) {
+            var data = JSON.parse(message.body);
+            document.getElementById("temperatures").innerHTML =
+                "<p><strong>Localização:</strong> " + data.location + "</p>" +
+                "<p><strong>Temperatura:</strong> " + data.temperature + "°C</p>";
+        });
+    });
+</script>
+
+</body>
+</html>
