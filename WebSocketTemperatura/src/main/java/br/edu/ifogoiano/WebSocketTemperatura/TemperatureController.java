@@ -1,15 +1,13 @@
 package br.edu.ifogoiano.WebSocketTemperatura;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 @Controller
 public class TemperatureController {
@@ -23,14 +21,26 @@ public class TemperatureController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @Scheduled(fixedRate = 5000)
-    public void sendTemperatureUpdate() {
-        // Código para chamar a API e obter a temperatura
-        String location = "London"; // Exemplo fixo para testar
-        double temperature = 22.5; // Exemplo fixo para testar
+    @GetMapping("/sendTemperatures")
+    public void sendTemperatureUpdates() {
+        List<String> locations = Arrays.asList(
+                "London", "Paris", "New York", "Tokyo", "Moscow",
+                "Rio de Janeiro", "Beijing", "Sydney", "Berlin", "Madrid"
+        );
 
-        TemperatureData data = new TemperatureData(location, temperature);
-        messagingTemplate.convertAndSend("/topic/temperature", data);
+        RestTemplate restTemplate = new RestTemplate();
+        for (String location : locations) {
+            String url = "http://api.openweathermap.org/data/2.5/weather?q=" + location +
+                    "&units=metric&appid=" + apiKey;
+
+            TemperatureResponse response = restTemplate.getForObject(url, TemperatureResponse.class);
+            double temperature = response != null && response.getMain() != null ? response.getMain().getTemp() : 0;
+            String description = response.getWeather().get(0).getDescription();
+            int humidity = response.getMain().getHumidity();
+            double windSpeed = response.getWind().getSpeed();
+
+            TemperatureData data = new TemperatureData(location, temperature, description, humidity, windSpeed);
+            messagingTemplate.convertAndSend("/topic/temperature", data);
+        }
     }
 }
-

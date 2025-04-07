@@ -17,17 +17,31 @@
 <div id="temperatures">Aguardando dados...</div>
 
 <script>
-    var socket = new SockJS('/ws');  // Verifique se a URL é a mesma configurada no servidor
+    var socket = new SockJS('/ws');
     var stompClient = Stomp.over(socket);
+    var messageCount = 0;
 
     stompClient.connect({}, function (frame) {
         console.log("Conectado: " + frame);
         stompClient.subscribe('/topic/temperature', function (message) {
             var data = JSON.parse(message.body);
-            document.getElementById("temperatures").innerHTML =
-                "<p><strong>Localização:</strong> " + data.location + "</p>" +
-                "<p><strong>Temperatura:</strong> " + data.temperature + "°C</p>";
+            var temperaturesDiv = document.getElementById("temperatures");
+            var newMessage = "<p><strong>Localização:</strong> " + data.location +
+                 " - <strong>Temperatura:</strong> " + data.temperature + "°C" +
+                 " - <strong>Clima:</strong> " + data.description +
+                 " - <strong>Umidade:</strong> " + data.humidity + "%" +
+                 " - <strong>Vento:</strong> " + data.windSpeed + " m/s</p>";
+            temperaturesDiv.innerHTML += newMessage;
+
+            messageCount++;
+            if (messageCount === 10) {
+                console.log("Recebidas 10 mensagens. Desconectando...");
+                stompClient.disconnect();
+            }
         });
+
+        // Depois de conectar, chama o endpoint para enviar as mensagens
+        fetch("/sendTemperatures");
     });
 </script>
 
