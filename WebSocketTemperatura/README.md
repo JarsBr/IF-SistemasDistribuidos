@@ -1,12 +1,16 @@
 # Monitoramento de Temperatura em Tempo Real
 
-Esta aplicação utiliza Spring Boot para enviar atualizações periódicas de informações climáticas em tempo real para um cliente web, por meio de WebSockets. A integração com a API do OpenWeatherMap permite obter dados reais como temperatura, descrição do clima, umidade e velocidade do vento para 10 localizações diferentes.
+Para visualizar o monitoramento funcionando, acesse o arquivo `index.html` diretamente no navegador, usando `localhost`. Certifique-se que o servidor Spring Boot esteja em execução para que a conexão WebSocket funcione corretamente.
+>http://localhost:8080/index.html
 
 ## Funcionalidade
 
 - **Servidor (Spring Boot):**
     - **Integração com a API de Clima:**  
       Utiliza o `RestTemplate` para fazer requisições à API do OpenWeatherMap e obter dados climáticos (temperatura, umidade, descrição do clima e velocidade do vento) para 10 localizações pré-definidas.
+
+    - **Agendamento de Tarefas:**  
+      Com a anotação `@Scheduled(fixedRate = 5000)`, o servidor executa a tarefa de buscar e enviar os dados a cada 5 segundos, escolhendo aleatoriamente uma das localizações.
 
     - **Envio via WebSocket:**  
       Os dados obtidos são encapsulados em um objeto `TemperatureData` e enviados para o tópico `/topic/temperature` usando o `SimpMessagingTemplate`.
